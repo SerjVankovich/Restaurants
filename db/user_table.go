@@ -45,7 +45,7 @@ func GetUserByEmail(dataBase *sql.DB, email string) (*models.User, error) {
 
 	user := new(models.User)
 
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.PrefRest, &user.Token, &user.Salt)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.PrefRest, &user.Token, &user.Salt, &user.Confirmed)
 
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func RegisterNewUser(dataBase *sql.DB, user *models.User) error {
 	user.Password = pass
 	user.Salt = salt
 
-	_, err := dataBase.Exec("INSERT INTO users (id, name, email, password, salt) values (DEFAULT, $1, $2, $3, $4)",
+	_, err := dataBase.Exec("INSERT INTO users (id, name, email, password, salt, confirmed) values (DEFAULT, $1, $2, $3, $4, DEFAULT)",
 		user.Name,
 		user.Email,
 		user.Password,
@@ -103,4 +103,25 @@ func RegisterNewUser(dataBase *sql.DB, user *models.User) error {
 	}
 
 	return nil
+}
+
+func ConfirmUser(dataBase *sql.DB, email string) error {
+	if dataBase == nil {
+		return dbErr
+	}
+
+	user, _ := GetUserByEmail(dataBase, email)
+
+	if user == nil {
+		return errors.New("user with this email doesn't exists")
+	}
+
+	if user.Confirmed {
+		return nil
+	}
+
+	_, err := dataBase.Exec(`UPDATE users SET "confirmed" = $1 WHERE email = $2`, true, email)
+
+	return err
+
 }

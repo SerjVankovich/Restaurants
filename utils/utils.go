@@ -5,11 +5,17 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"io"
 	"io/ioutil"
 	rand2 "math/rand"
+	"net"
+	"net/mail"
+	"net/smtp"
 	"os"
 	"time"
 )
@@ -19,6 +25,19 @@ type DbConfig struct {
 	Password string `json:"password"`
 	Dbname   string `json:"dbname"`
 	Sslmode  string `json:"sslmode"`
+}
+
+type Sender struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type hmac struct {
+	Secret string `json:"hmac-secret"`
+}
+
+type jwtSecret struct {
+	Secret string `json:"jwt-secret"`
 }
 
 func ParseDbConfig(path string) (*DbConfig, error) {
@@ -95,4 +114,171 @@ func GetRandomString(length int) string {
 	}
 
 	return string(byteStr)
+}
+
+func SendEmail(email string, data string) error {
+	path, err := os.Getwd()
+
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open(path + "\\keys.json")
+
+	if err != nil {
+		return err
+	}
+
+	byteValue, err := ioutil.ReadAll(file)
+
+	if err != nil {
+		return err
+	}
+
+	var sender Sender
+
+	err = json.Unmarshal(byteValue, &sender)
+
+	if err != nil {
+		return err
+	}
+
+	from := mail.Address{"", sender.Email}
+	to := mail.Address{"", email}
+	subj := "Registration"
+	body := "To complete registration go to \n http://localhost:8080/register?query=mutation+_{completeRegister(hash:\"" +
+		data + "\"){successful}}"
+
+	// Setup headers
+	headers := make(map[string]string)
+	headers["From"] = from.String()
+	headers["To"] = to.String()
+	headers["Subject"] = subj
+
+	// Setup message
+	message := ""
+	for k, v := range headers {
+		message += fmt.Sprintf("%s: %s\r\n", k, v)
+	}
+	message += "\r\n" + body
+
+	// Connect to the SMTP Server
+	servername := "smtp.gmail.com:465"
+
+	host, _, _ := net.SplitHostPort(servername)
+
+	auth := smtp.PlainAuth("", sender.Email, sender.Password, host)
+
+	// TLS config
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         host,
+	}
+
+	// Here is the key, you need to call tls.Dial instead of smtp.Dial
+	// for smtp servers running on 465 that require an ssl connection
+	// from the very beginning (no starttls)
+	conn, err := tls.Dial("tcp", servername, tlsconfig)
+	if err != nil {
+		return err
+	}
+
+	c, err := smtp.NewClient(conn, host)
+	if err != nil {
+		return err
+	}
+
+	// Auth
+	if err = c.Auth(auth); err != nil {
+		return err
+	}
+
+	// To && From
+	if err = c.Mail(from.Address); err != nil {
+		return err
+	}
+
+	if err = c.Rcpt(to.Address); err != nil {
+		return err
+	}
+
+	// Data
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write([]byte(message))
+	if err != nil {
+		return err
+	}
+
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+
+	c.Quit()
+
+	return nil
+
+}
+
+func ParseHMACSecret(path string) string {
+	file, err := os.Open(path)
+
+	if err != nil {
+		panic(err)
+	}
+
+	byteValue, err := ioutil.ReadAll(file)
+
+	if err != nil {
+		panic(err)
+	}
+
+	hmac := new(hmac)
+
+	err = json.Unmarshal(byteValue, hmac)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return hmac.Secret
+
+}
+
+func ParseJwtSecret(path string) []byte {
+	file, _ := os.Open(path)
+
+	byteValue, err := ioutil.ReadAll(file)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var jwtS jwtSecret
+
+	err = json.Unmarshal(byteValue, &jwtS)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return []byte(jwtS.Secret)
+}
+
+func CreateToken(secret []byte, email string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := make(jwt.MapClaims)
+	claims["email"] = email
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	token.Claims = claims
+
+	tokenString, err := token.SignedString(secret)
+
+	return tokenString, err
 }
