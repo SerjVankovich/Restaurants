@@ -8,7 +8,7 @@ import (
 func RestaurantSchema(dataBase *sql.DB) (graphql.Schema, error) {
 	return graphql.NewSchema(
 		graphql.SchemaConfig{
-			Query:    nil,
-			Mutation: nil,
+			Query:    RestaurantQuery(dataBase),
+			Mutation: RestaurantMutation(dataBase),
 		})
 }
