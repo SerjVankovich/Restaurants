@@ -1,20 +1,22 @@
-package users
+package restaurants_owners
 
 import (
 	"../../db"
 	"../../models"
 	"../../utils"
+	"../users"
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/graphql-go/graphql"
 	"os"
 )
 
 func register(dataBase *sql.DB) *graphql.Field {
 	return &graphql.Field{
-		Type:        HashType,
-		Description: "Register one user",
+		Type:        users.HashType,
+		Description: "Register one restaurant owner",
 		Args: graphql.FieldConfigArgument{
 			"email": &graphql.ArgumentConfig{
 				Type: graphql.String,
@@ -41,9 +43,9 @@ func register(dataBase *sql.DB) *graphql.Field {
 				return nil, errors.New("name not provided")
 			}
 
-			user := &models.User{Email: email, Password: password, Name: name}
+			owner := &models.RestaurantOwner{Email: email, Password: password, Name: name}
 
-			err := db.RegisterNewUser(dataBase, user)
+			err := db.RegisterNewOwner(dataBase, owner)
 
 			if err != nil {
 				return nil, err
@@ -53,7 +55,7 @@ func register(dataBase *sql.DB) *graphql.Field {
 
 			hmac := utils.ParseHMACSecret(path + "\\keys.json")
 
-			hash := hex.EncodeToString(utils.Encrypt([]byte(user.Email), hmac))
+			hash := hex.EncodeToString(utils.Encrypt([]byte(owner.Email), hmac))
 
 			return &models.Hash{Hash: hash}, nil
 		},
@@ -62,7 +64,7 @@ func register(dataBase *sql.DB) *graphql.Field {
 
 func login(dataBase *sql.DB) *graphql.Field {
 	return &graphql.Field{
-		Type: ConfirmedType,
+		Type: users.ConfirmedType,
 		Args: graphql.FieldConfigArgument{
 			"email": &graphql.ArgumentConfig{
 				Type: graphql.String,
@@ -72,7 +74,7 @@ func login(dataBase *sql.DB) *graphql.Field {
 			},
 		},
 		Resolve:     loginResolver(dataBase),
-		Description: "User login",
+		Description: "Restaurant owner login",
 	}
 }
 
@@ -89,22 +91,22 @@ func loginResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 			return nil, errors.New("password not provided")
 		}
 
-		user, err := db.GetUserByEmail(dataBase, email)
+		owner, err := db.GetOwnerByEmail(dataBase, email)
 
 		if err != nil {
 			return nil, err
 		}
 
-		bytePass, err := hex.DecodeString(user.Password)
-		userPassword := string(utils.Decrypt(bytePass, user.Salt))
+		bytePass, err := hex.DecodeString(owner.Password)
+		ownerPassword := string(utils.Decrypt(bytePass, *owner.Salt))
 
-		if userPassword != password {
+		if ownerPassword != password {
 			return nil, errors.New("authentication failed: wrong password")
 		}
 
 		path, _ := os.Getwd()
 
-		conf, isConfirm := CheckUserConfirm(*user)
+		conf, isConfirm := CheckOwnerConfirm(*owner)
 
 		if !isConfirm {
 			return conf, nil
@@ -112,7 +114,7 @@ func loginResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 
 		jwtSecret := utils.ParseJwtSecret(path + "\\keys.json")
 
-		token, err := utils.CreateToken(jwtSecret, user.Email)
+		token, err := utils.CreateToken(jwtSecret, owner.Email)
 
 		if err != nil {
 			return nil, err
@@ -128,13 +130,13 @@ func loginResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 	}
 }
 
-func CheckUserConfirm(user models.User) (*models.Confirm, bool) {
+func CheckOwnerConfirm(owner models.RestaurantOwner) (*models.Confirm, bool) {
 	path, _ := os.Getwd()
 
-	if !user.Confirmed {
+	if !owner.Confirmed {
 		hmac := utils.ParseHMACSecret(path + "\\keys.json")
 
-		hash := hex.EncodeToString(utils.Encrypt([]byte(user.Email), hmac))
+		hash := hex.EncodeToString(utils.Encrypt([]byte(owner.Email), hmac))
 		return &models.Confirm{
 			IsOk:        false,
 			AccessToken: "",
@@ -147,8 +149,8 @@ func CheckUserConfirm(user models.User) (*models.Confirm, bool) {
 
 func confirmRegister(dataBase *sql.DB) *graphql.Field {
 	return &graphql.Field{
-		Type:        ConfirmedType,
-		Description: "Confirm user registration",
+		Type:        users.ConfirmedType,
+		Description: "Confirm restaurant owner registration",
 		Args: graphql.FieldConfigArgument{
 			"hash": &graphql.ArgumentConfig{
 				Type: graphql.String,
@@ -187,7 +189,8 @@ func confirmRegisterResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 			return nil, err
 		}
 
-		err = db.ConfirmUser(dataBase, email, token)
+		fmt.Println(token)
+		err = db.ConfirmOwner(dataBase, email, token)
 
 		if err != nil {
 			return nil, err
@@ -200,7 +203,7 @@ func confirmRegisterResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 	}
 }
 
-func UserMutation(dataBase *sql.DB) *graphql.Object {
+func RestaurantOwnerMutation(dataBase *sql.DB) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Mutation",

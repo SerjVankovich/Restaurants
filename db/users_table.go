@@ -26,7 +26,7 @@ func GetAllUsers(dataBase *sql.DB) ([]*models.User, error) {
 
 	for rows.Next() {
 		user := new(models.User)
-		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.PrefRest, &user.Token, &user.Salt)
+		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.PrefRest, &user.Token, &user.Salt, &user.Confirmed)
 
 		if err != nil {
 			return nil, err
@@ -63,7 +63,7 @@ func GetUserById(dataBase *sql.DB, id int32) (*models.User, error) {
 
 	user := new(models.User)
 
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.PrefRest, &user.Token, &user.Salt)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.PrefRest, &user.Token, &user.Salt, &user.Confirmed)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func RegisterNewUser(dataBase *sql.DB, user *models.User) error {
 	return nil
 }
 
-func ConfirmUser(dataBase *sql.DB, email string) error {
+func ConfirmUser(dataBase *sql.DB, email string, token string) error {
 	if dataBase == nil {
 		return dbErr
 	}
@@ -120,7 +120,7 @@ func ConfirmUser(dataBase *sql.DB, email string) error {
 		return nil
 	}
 
-	_, err := dataBase.Exec(`UPDATE users SET "confirmed" = $1 WHERE email = $2`, true, email)
+	_, err := dataBase.Exec(`UPDATE users SET "confirmed" = $1, "token" = $3 WHERE email = $2`, true, email, token)
 
 	return err
 
