@@ -27,6 +27,14 @@ func getOrdersQuery(dataBase *sql.DB, query string) ([]*models.Order, error) {
 			return nil, err
 		}
 
+		items, err := GetAllItemsByOrder(dataBase, order.Id)
+
+		if err != nil {
+			return nil, err
+		}
+
+		order.OrderItems = items
+
 		orders = append(orders, &order)
 
 	}
@@ -51,15 +59,20 @@ func AddOrder(dataBase *sql.DB, order *models.Order) (*models.Order, error) {
 		return nil, dbErr
 	}
 
-	_, err := dataBase.Exec(`INSERT INTO orders (id, "user", restaurant, time, complete) VALUES (DEFAULT, $1, $2, $3, DEFAULT)`,
+	row := dataBase.QueryRow(`INSERT INTO orders (id, "user", restaurant, time, complete) VALUES (DEFAULT, $1, $2, $3, DEFAULT) RETURNING id`,
 		order.User,
 		order.Restaurant,
 		order.Time,
 	)
 
+	var id int
+
+	err := row.Scan(&id)
+
 	if err != nil {
 		return nil, err
 	}
+	order.Id = id
 
 	return order, nil
 }

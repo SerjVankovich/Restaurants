@@ -2,6 +2,25 @@ package orders
 
 import "github.com/graphql-go/graphql"
 
+var OrderItem = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "OrderItem",
+		Fields: graphql.Fields{
+			"id": &graphql.Field{
+				Type: graphql.Int,
+			},
+			"product": &graphql.Field{
+				Type: graphql.Int,
+			},
+			"num_product": &graphql.Field{
+				Type: graphql.Int,
+			},
+			"order": &graphql.Field{
+				Type: graphql.Int,
+			},
+		},
+	})
+
 var OrderType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Order",
@@ -20,6 +39,9 @@ var OrderType = graphql.NewObject(
 			},
 			"complete": &graphql.Field{
 				Type: graphql.Boolean,
+			},
+			"order_items": &graphql.Field{
+				Type: graphql.NewList(OrderItem),
 			},
 		},
 	})

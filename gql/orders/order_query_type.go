@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/graphql-go/graphql"
+	"net/http"
 )
 
-func OrderQueryType(dataBase *sql.DB) *graphql.Object {
+func OrderQueryType(dataBase *sql.DB, request *http.Request) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Query",
