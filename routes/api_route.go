@@ -3,6 +3,7 @@ package routes
 import (
 	"../controllers"
 	"../gql/categories"
+	"../gql/orders"
 	"../gql/products"
 	"../gql/restaurants"
 	"../gql/restaurants_owners"
@@ -41,6 +42,13 @@ func ApiRoute(dataBase *sql.DB) *mux.Router {
 	if err != nil {
 		panic(err)
 	}
+
+	ordersSchema, err := orders.OrderSchema(dataBase)
+
+	if err != nil {
+		panic(err)
+	}
+
 	route := "/api/v1/"
 	r := mux.NewRouter()
 	r.HandleFunc(route+"restaurants", controllers.GQLHandler(restaurantsSchema))
@@ -48,6 +56,7 @@ func ApiRoute(dataBase *sql.DB) *mux.Router {
 	r.HandleFunc(route+"restaurants_owners", controllers.GQLHandler(restaurantOwnerSchema))
 	r.HandleFunc(route+"categories", controllers.GQLHandler(categoriesSchema))
 	r.HandleFunc(route+"products", controllers.GQLHandler(productsSchema))
+	r.HandleFunc(route+"orders", controllers.GQLHandler(ordersSchema))
 
 	return r
 }
