@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/graphql-go/graphql"
 	"net/http"
+	"restaurants/utils"
 	"time"
 )
 
@@ -71,13 +72,26 @@ func addOrder(dataBase *sql.DB, request *http.Request) *graphql.Field {
 				return nil, errors.New("user not provided")
 			}
 
+			tokenHeader := request.Header.Get("Authorization")
+
+			claims, err := utils.ValidateToken(tokenHeader)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if claims["type"] != "user" {
+				return nil, errors.New(`user type is not "user" (maybe "owner")`)
+			}
+
 			order := models.Order{User: user, Restaurant: restaurant, Time: time.Now().UTC()}
 
 			decoder := json.NewDecoder(request.Body)
+			defer request.Body.Close()
 
 			var items []*models.OrderItem
 
-			err := decoder.Decode(&items)
+			err = decoder.Decode(&items)
 
 			if err != nil {
 				return nil, err

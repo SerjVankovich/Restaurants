@@ -114,7 +114,7 @@ func loginResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 
 		jwtSecret := utils.ParseJwtSecret(path + "\\keys.json")
 
-		token, err := utils.CreateToken(jwtSecret, owner.Email)
+		token, err := utils.CreateToken(jwtSecret, owner.Email, "owner")
 
 		if err != nil {
 			return nil, err
@@ -183,7 +183,7 @@ func confirmRegisterResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 
 		jwtSecret := utils.ParseJwtSecret(path + "\\keys.json")
 
-		token, err := utils.CreateToken(jwtSecret, email)
+		token, err := utils.CreateToken(jwtSecret, email, "owner")
 
 		if err != nil {
 			return nil, err

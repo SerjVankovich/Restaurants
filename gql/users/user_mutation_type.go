@@ -112,7 +112,7 @@ func loginResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 
 		jwtSecret := utils.ParseJwtSecret(path + "\\keys.json")
 
-		token, err := utils.CreateToken(jwtSecret, user.Email)
+		token, err := utils.CreateToken(jwtSecret, user.Email, "user")
 
 		if err != nil {
 			return nil, err
@@ -122,6 +122,12 @@ func loginResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 			IsOk:        true,
 			AccessToken: token,
 			ConfirmHash: "",
+		}
+
+		err = db.ConfirmUser(dataBase, email, token)
+
+		if err != nil {
+			return nil, err
 		}
 
 		return regConfirm, nil
@@ -181,7 +187,7 @@ func confirmRegisterResolver(dataBase *sql.DB) graphql.FieldResolveFn {
 
 		jwtSecret := utils.ParseJwtSecret(path + "\\keys.json")
 
-		token, err := utils.CreateToken(jwtSecret, email)
+		token, err := utils.CreateToken(jwtSecret, email, "user")
 
 		if err != nil {
 			return nil, err

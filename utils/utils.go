@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"io"
@@ -269,16 +270,45 @@ func ParseJwtSecret(path string) []byte {
 	return []byte(jwtS.Secret)
 }
 
-func CreateToken(secret []byte, email string) (string, error) {
+func CreateToken(secret []byte, email string, userType string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := make(jwt.MapClaims)
 	claims["email"] = email
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	claims["type"] = userType
 
 	token.Claims = claims
 
 	tokenString, err := token.SignedString(secret)
 
 	return tokenString, err
+}
+
+func ValidateToken(tokenHeader string) (map[string]interface{}, error) {
+	token, err := jwt.Parse(tokenHeader, func(token *jwt.Token) (i interface{}, e error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		path, err := os.Getwd()
+
+		if err != nil {
+			return nil, err
+		}
+
+		return ParseJwtSecret(path + "\\keys.json"), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+
+	if !ok || !token.Valid {
+		return nil, errors.New("authentication failed")
+	}
+
+	return claims, nil
 }

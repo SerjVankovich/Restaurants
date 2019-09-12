@@ -3,14 +3,9 @@ package main
 import (
 	"./db"
 	"./routes"
-	"database/sql"
 	"github.com/gorilla/handlers"
 	"net/http"
 	"os"
-)
-
-var (
-	dataBase *sql.DB
 )
 
 func main() {
