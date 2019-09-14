@@ -3,6 +3,7 @@ package db
 import (
 	"../models"
 	"database/sql"
+	"strconv"
 )
 
 func getOrdersQuery(dataBase *sql.DB, query string) ([]*models.Order, error) {
@@ -52,6 +53,10 @@ func GetUncompletedOrders(dataBase *sql.DB) ([]*models.Order, error) {
 
 func GetCompleteOrders(dataBase *sql.DB) ([]*models.Order, error) {
 	return getOrdersQuery(dataBase, "SELECT * FROM orders WHERE complete = TRUE")
+}
+
+func GetOrdersByRestaurant(dataBase *sql.DB, id int) ([]*models.Order, error) {
+	return getOrdersQuery(dataBase, "SELECT * FROM orders WHERE restaurant = "+strconv.Itoa(id))
 }
 
 func AddOrder(dataBase *sql.DB, order *models.Order) (*models.Order, error) {

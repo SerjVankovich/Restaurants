@@ -4,7 +4,6 @@ import (
 	"../models"
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 )
 
@@ -51,8 +50,6 @@ func AddItems(dataBase *sql.DB, orderItems []*models.OrderItem, id int) error {
 		query += `(DEFAULT, ` + strconv.Itoa(item.Product) + `, ` + strconv.Itoa(item.NumProduct) + `, ` +
 			strconv.Itoa(id) + `), `
 	}
-
-	fmt.Println(query[:len(query)-2])
 
 	_, err := dataBase.Exec(query[:len(query)-2])
 
