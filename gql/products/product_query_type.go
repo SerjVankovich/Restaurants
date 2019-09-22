@@ -55,7 +55,7 @@ func productsByCategory(dataBase *sql.DB) *graphql.Field {
 				return nil, errors.New("category not provided")
 			}
 
-			return db.GetProductByCategory(dataBase, category)
+			return db.GetProductsByCategory(dataBase, category)
 		},
 		Description: "Get all products by category",
 	}

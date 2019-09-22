@@ -5,12 +5,12 @@ import (
 	"database/sql"
 )
 
-func GetAllRestaurants(dataBase *sql.DB) ([]*models.Restaurant, error) {
+func getRestaurantsQuery(dataBase *sql.DB, query string) ([]*models.Restaurant, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
 
-	rows, err := dataBase.Query("SELECT * FROM restaurants")
+	rows, err := dataBase.Query(query)
 
 	if err != nil {
 		return nil, err
@@ -41,6 +41,10 @@ func GetAllRestaurants(dataBase *sql.DB) ([]*models.Restaurant, error) {
 	return restaurants, nil
 }
 
+func GetAllRestaurants(dataBase *sql.DB) ([]*models.Restaurant, error) {
+	return getRestaurantsQuery(dataBase, "SELECT * FROM restaurants")
+}
+
 func GetRestaurantById(dataBase *sql.DB, id int) (*models.Restaurant, error) {
 	if dataBase == nil {
 		return nil, dbErr
@@ -63,33 +67,7 @@ func GetRestaurantById(dataBase *sql.DB, id int) (*models.Restaurant, error) {
 }
 
 func GetRestaurantsByName(dataBase *sql.DB, name string) ([]*models.Restaurant, error) {
-	if dataBase == nil {
-		return nil, dbErr
-	}
-	var restaurants []*models.Restaurant
-	rows, err := dataBase.Query("SELECT * FROM restaurants WHERE name = $1", name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		var restaurant models.Restaurant
-		err = rows.Scan(
-			&restaurant.Id,
-			&restaurant.Name,
-			&restaurant.Latitude,
-			&restaurant.Longitude,
-			&restaurant.Description,
-			&restaurant.Owner)
-		if err != nil {
-			return nil, err
-		}
-
-		restaurants = append(restaurants, &restaurant)
-	}
-
-	return restaurants, nil
+	return getRestaurantsQuery(dataBase, "SELECT * FROM restaurants WHERE name = "+name)
 }
 
 func AddRestaurant(dataBase *sql.DB, restaurant *models.Restaurant) error {

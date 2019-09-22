@@ -59,6 +59,10 @@ func GetOrdersByRestaurant(dataBase *sql.DB, id int) ([]*models.Order, error) {
 	return getOrdersQuery(dataBase, "SELECT * FROM orders WHERE restaurant = "+strconv.Itoa(id))
 }
 
+func GetOrdersByUser(dataBase *sql.DB, user int) ([]*models.Order, error) {
+	return getOrdersQuery(dataBase, "SELECT * FROM orders WHERE user = "+strconv.Itoa(user))
+}
+
 func AddOrder(dataBase *sql.DB, order *models.Order) (*models.Order, error) {
 	if dataBase == nil {
 		return nil, dbErr
