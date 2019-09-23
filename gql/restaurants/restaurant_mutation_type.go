@@ -6,19 +6,21 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/graphql-go/graphql"
+	"net/http"
+	"restaurants/utils"
 )
 
-func RestaurantMutation(dataBase *sql.DB) *graphql.Object {
+func RestaurantMutation(dataBase *sql.DB, request *http.Request) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Mutation",
 			Fields: graphql.Fields{
-				"addRestaurant": addRestaurant(dataBase),
+				"addRestaurant": addRestaurant(dataBase, request),
 			},
 		})
 }
 
-func addRestaurant(dataBase *sql.DB) *graphql.Field {
+func addRestaurant(dataBase *sql.DB, request *http.Request) *graphql.Field {
 	return &graphql.Field{
 		Type: RestaurantType,
 		Args: graphql.FieldConfigArgument{
@@ -65,9 +67,17 @@ func addRestaurant(dataBase *sql.DB) *graphql.Field {
 				return nil, errors.New("owner not provided")
 			}
 
+			tokenHeader := request.Header.Get("Authorization")
+
+			err := utils.SimpleValidateToken(tokenHeader, utils.OWNER)
+
+			if err != nil {
+				return nil, err
+			}
+
 			restaurant := models.Restaurant{Name: name, Description: description, Latitude: float32(latitude), Longitude: float32(longitude), Owner: int32(owner)}
 
-			err := db.AddRestaurant(dataBase, &restaurant)
+			err = db.AddRestaurant(dataBase, &restaurant)
 
 			if err != nil {
 				return nil, err

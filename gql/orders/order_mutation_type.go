@@ -39,7 +39,15 @@ func completeOrder(dataBase *sql.DB, request *http.Request) *graphql.Field {
 				return nil, errors.New("id not provided")
 			}
 
-			err := db.CompleteOrder(dataBase, id)
+			tokenHeader := request.Header.Get(utils.AUTHORIZATION)
+
+			err := utils.SimpleValidateToken(tokenHeader, utils.OWNER)
+
+			if err != nil {
+				return nil, err
+			}
+
+			err = db.CompleteOrder(dataBase, id)
 
 			fmt.Println(err)
 
@@ -72,17 +80,9 @@ func addOrder(dataBase *sql.DB, request *http.Request) *graphql.Field {
 				return nil, errors.New("user not provided")
 			}
 
-			tokenHeader := request.Header.Get("Authorization")
+			tokenHeader := request.Header.Get(utils.AUTHORIZATION)
 
-			claims, err := utils.ValidateToken(tokenHeader)
-
-			if err != nil {
-				return nil, err
-			}
-
-			if claims["type"] != "user" {
-				return nil, errors.New(`user type is not "user" (maybe "owner")`)
-			}
+			err := utils.SimpleValidateToken(tokenHeader, utils.USER)
 
 			order := models.Order{User: user, Restaurant: restaurant, Time: time.Now().UTC()}
 

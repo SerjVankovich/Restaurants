@@ -3,14 +3,13 @@ package db
 import (
 	"../models"
 	"../utils"
-	"database/sql"
 	"encoding/hex"
 	"errors"
 )
 
 var dbErr = errors.New("dataBase argument wasn't provided")
 
-func GetAllUsers(dataBase *sql.DB) ([]*models.User, error) {
+func GetAllUsers(dataBase dbInterface) ([]*models.User, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -37,7 +36,7 @@ func GetAllUsers(dataBase *sql.DB) ([]*models.User, error) {
 	return users, nil
 }
 
-func GetUserByEmail(dataBase *sql.DB, email string) (*models.User, error) {
+func GetUserByEmail(dataBase dbInterface, email string) (*models.User, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -54,7 +53,7 @@ func GetUserByEmail(dataBase *sql.DB, email string) (*models.User, error) {
 	return user, nil
 }
 
-func GetUserById(dataBase *sql.DB, id int32) (*models.User, error) {
+func GetUserById(dataBase dbInterface, id int32) (*models.User, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -71,7 +70,7 @@ func GetUserById(dataBase *sql.DB, id int32) (*models.User, error) {
 	return user, nil
 }
 
-func RegisterNewUser(dataBase *sql.DB, user *models.User) error {
+func RegisterNewUser(dataBase dbInterface, user *models.User) error {
 	if dataBase == nil {
 		return dbErr
 	}
@@ -105,7 +104,7 @@ func RegisterNewUser(dataBase *sql.DB, user *models.User) error {
 	return nil
 }
 
-func ConfirmUser(dataBase *sql.DB, email string, token string) error {
+func ConfirmUser(dataBase dbInterface, email string, token string) error {
 	if dataBase == nil {
 		return dbErr
 	}

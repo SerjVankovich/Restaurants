@@ -2,12 +2,11 @@ package db
 
 import (
 	"../models"
-	"database/sql"
 	"errors"
 	"strconv"
 )
 
-func GetAllItemsByOrder(dataBase *sql.DB, order int) ([]*models.OrderItem, error) {
+func GetAllItemsByOrder(dataBase dbInterface, order int) ([]*models.OrderItem, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -36,7 +35,7 @@ func GetAllItemsByOrder(dataBase *sql.DB, order int) ([]*models.OrderItem, error
 
 }
 
-func AddItems(dataBase *sql.DB, orderItems []*models.OrderItem, id int) error {
+func AddItems(dataBase dbInterface, orderItems []*models.OrderItem, id int) error {
 	if dataBase == nil {
 		return dbErr
 	}

@@ -2,11 +2,10 @@ package db
 
 import (
 	"../models"
-	"database/sql"
 	"strconv"
 )
 
-func getProductsQuery(dataBase *sql.DB, query string) ([]*models.Product, error) {
+func getProductsQuery(dataBase dbInterface, query string) ([]*models.Product, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -32,11 +31,11 @@ func getProductsQuery(dataBase *sql.DB, query string) ([]*models.Product, error)
 	return products, nil
 }
 
-func GetAllProducts(dataBase *sql.DB) ([]*models.Product, error) {
+func GetAllProducts(dataBase dbInterface) ([]*models.Product, error) {
 	return getProductsQuery(dataBase, "SELECT * FROM products")
 }
 
-func GetProductById(dataBase *sql.DB, id int) (*models.Product, error) {
+func GetProductById(dataBase dbInterface, id int) (*models.Product, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -54,11 +53,11 @@ func GetProductById(dataBase *sql.DB, id int) (*models.Product, error) {
 	return &product, nil
 }
 
-func GetProductsByCategory(dataBase *sql.DB, category int) ([]*models.Product, error) {
+func GetProductsByCategory(dataBase dbInterface, category int) ([]*models.Product, error) {
 	return getProductsQuery(dataBase, "SELECT * FROM products WHERE category = "+strconv.Itoa(category))
 }
 
-func AddProduct(dataBase *sql.DB, product *models.Product) (*models.Product, error) {
+func AddProduct(dataBase dbInterface, product *models.Product) (*models.Product, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}

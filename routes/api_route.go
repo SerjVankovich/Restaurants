@@ -25,32 +25,14 @@ func ApiRoute(dataBase *sql.DB) *mux.Router {
 		panic(err)
 	}
 
-	restaurantsSchema, err := restaurants.RestaurantSchema(dataBase)
-
-	if err != nil {
-		panic(err)
-	}
-
-	categoriesSchema, err := categories.CategorySchema(dataBase)
-
-	if err != nil {
-		panic(err)
-	}
-
-	productsSchema, err := products.ProductSchema(dataBase)
-
-	if err != nil {
-		panic(err)
-	}
-
 	route := "/api/v1/"
 	r := mux.NewRouter()
-	r.HandleFunc(route+"restaurants", controllers.GQLHandler(restaurantsSchema))
+	r.HandleFunc(route+"restaurants", controllers.GQLHandlerWithRequest(dataBase, restaurants.RestaurantSchema))
 	r.HandleFunc(route+"users", controllers.GQLHandler(userSchema))
 	r.HandleFunc(route+"restaurants_owners", controllers.GQLHandler(restaurantOwnerSchema))
-	r.HandleFunc(route+"categories", controllers.GQLHandler(categoriesSchema))
-	r.HandleFunc(route+"products", controllers.GQLHandler(productsSchema))
-	r.HandleFunc(route+"orders", controllers.GQLHandlerPost(dataBase, orders.OrderSchema))
+	r.HandleFunc(route+"categories", controllers.GQLHandlerWithRequest(dataBase, categories.CategorySchema))
+	r.HandleFunc(route+"products", controllers.GQLHandlerWithRequest(dataBase, products.ProductSchema))
+	r.HandleFunc(route+"orders", controllers.GQLHandlerWithRequest(dataBase, orders.OrderSchema))
 
 	return r
 }

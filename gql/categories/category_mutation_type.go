@@ -6,19 +6,21 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/graphql-go/graphql"
+	"net/http"
+	"restaurants/utils"
 )
 
-func CategoryMutationType(dataBase *sql.DB) *graphql.Object {
+func CategoryMutationType(dataBase *sql.DB, request *http.Request) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Mutation",
 			Fields: graphql.Fields{
-				"addCategory": addCategory(dataBase),
+				"addCategory": addCategory(dataBase, request),
 			},
 		})
 }
 
-func addCategory(dataBase *sql.DB) *graphql.Field {
+func addCategory(dataBase *sql.DB, request *http.Request) *graphql.Field {
 	return &graphql.Field{
 		Type: CategoryType,
 		Args: graphql.FieldConfigArgument{
@@ -41,9 +43,13 @@ func addCategory(dataBase *sql.DB) *graphql.Field {
 				return nil, errors.New("restaurant not provided")
 			}
 
+			tokenHeader := request.Header.Get(utils.AUTHORIZATION)
+
+			err := utils.SimpleValidateToken(tokenHeader, utils.OWNER)
+
 			category := models.Category{Name: name, Restaurant: restaurant}
 
-			err := db.AddCategory(dataBase, category)
+			err = db.AddCategory(dataBase, category)
 
 			if err != nil {
 				return nil, err

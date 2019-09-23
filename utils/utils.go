@@ -41,6 +41,12 @@ type jwtSecret struct {
 	Secret string `json:"jwt-secret"`
 }
 
+const (
+	OWNER         = "owner"
+	USER          = "user"
+	AUTHORIZATION = "Authorization"
+)
+
 func ParseDbConfig(path string) (*DbConfig, error) {
 	file, err := os.Open(path)
 
@@ -283,6 +289,19 @@ func CreateToken(secret []byte, email string, userType string) (string, error) {
 	tokenString, err := token.SignedString(secret)
 
 	return tokenString, err
+}
+
+func SimpleValidateToken(header string, userType string) error {
+	claims, err := ValidateToken(header)
+	if err != nil {
+		return err
+	}
+	userT := claims["type"].(string)
+	if userT != userType {
+		return errors.New(`user type is not "` + userType + `" but "` + userT + `"`)
+	}
+
+	return nil
 }
 
 func ValidateToken(tokenHeader string) (map[string]interface{}, error) {

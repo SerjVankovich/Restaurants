@@ -6,19 +6,21 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/graphql-go/graphql"
+	"net/http"
+	"restaurants/utils"
 )
 
-func ProductMutationType(dataBase *sql.DB) *graphql.Object {
+func ProductMutationType(dataBase *sql.DB, request *http.Request) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
 			Name: "Mutation",
 			Fields: graphql.Fields{
-				"addProduct": addProduct(dataBase),
+				"addProduct": addProduct(dataBase, request),
 			},
 		})
 }
 
-func addProduct(dataBase *sql.DB) *graphql.Field {
+func addProduct(dataBase *sql.DB, request *http.Request) *graphql.Field {
 	return &graphql.Field{
 		Type: ProductType,
 		Args: graphql.FieldConfigArgument{
@@ -56,6 +58,10 @@ func addProduct(dataBase *sql.DB) *graphql.Field {
 			if !categoryOk {
 				return nil, errors.New("category not provided")
 			}
+
+			tokenHeader := request.Header.Get(utils.AUTHORIZATION)
+
+			err := utils.SimpleValidateToken(tokenHeader, utils.OWNER)
 
 			product := models.Product{Name: name, Description: description, Price: float32(price), Category: category}
 

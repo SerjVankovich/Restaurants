@@ -18,7 +18,7 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 	return result
 }
 
-func GQLHandlerPost(dataBase *sql.DB, schema func(*sql.DB, *http.Request) (graphql.Schema, error)) http.HandlerFunc {
+func GQLHandlerWithRequest(dataBase *sql.DB, schema func(*sql.DB, *http.Request) (graphql.Schema, error)) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		sch, err := schema(dataBase, request)
 

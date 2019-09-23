@@ -3,12 +3,11 @@ package db
 import (
 	"../models"
 	"../utils"
-	"database/sql"
 	"encoding/hex"
 	"errors"
 )
 
-func GetAllOwners(dataBase *sql.DB) ([]*models.RestaurantOwner, error) {
+func GetAllOwners(dataBase dbInterface) ([]*models.RestaurantOwner, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -35,7 +34,7 @@ func GetAllOwners(dataBase *sql.DB) ([]*models.RestaurantOwner, error) {
 	return owners, nil
 }
 
-func GetOwnerByEmail(dataBase *sql.DB, email string) (*models.RestaurantOwner, error) {
+func GetOwnerByEmail(dataBase dbInterface, email string) (*models.RestaurantOwner, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -52,7 +51,7 @@ func GetOwnerByEmail(dataBase *sql.DB, email string) (*models.RestaurantOwner, e
 	return owner, nil
 }
 
-func GetOwnerById(dataBase *sql.DB, id int32) (*models.RestaurantOwner, error) {
+func GetOwnerById(dataBase dbInterface, id int32) (*models.RestaurantOwner, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -69,7 +68,7 @@ func GetOwnerById(dataBase *sql.DB, id int32) (*models.RestaurantOwner, error) {
 	return owner, nil
 }
 
-func RegisterNewOwner(dataBase *sql.DB, owner *models.RestaurantOwner) error {
+func RegisterNewOwner(dataBase dbInterface, owner *models.RestaurantOwner) error {
 	if dataBase == nil {
 		return dbErr
 	}
@@ -103,7 +102,7 @@ func RegisterNewOwner(dataBase *sql.DB, owner *models.RestaurantOwner) error {
 	return nil
 }
 
-func ConfirmOwner(dataBase *sql.DB, email string, token string) error {
+func ConfirmOwner(dataBase dbInterface, email string, token string) error {
 	if dataBase == nil {
 		return dbErr
 	}

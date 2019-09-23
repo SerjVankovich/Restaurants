@@ -9,24 +9,6 @@ import (
 	"restaurants/utils"
 )
 
-const (
-	OWNER = "owner"
-	USER  = "user"
-)
-
-func queryValidate(header string, userType string) error {
-	claims, err := utils.ValidateToken(header)
-	if err != nil {
-		return err
-	}
-	userT := claims["type"].(string)
-	if userT != userType {
-		return errors.New(`user type is not "` + userType + `" but "` + userT + `"`)
-	}
-
-	return nil
-}
-
 func OrderQueryType(dataBase *sql.DB, request *http.Request) *graphql.Object {
 	return graphql.NewObject(
 		graphql.ObjectConfig{
@@ -79,7 +61,7 @@ func ordersByUser(dataBase *sql.DB, request *http.Request) graphql.FieldResolveF
 			return nil, errors.New("user id not provided")
 		}
 
-		err := queryValidate(request.Header.Get("Authorization"), USER)
+		err := utils.SimpleValidateToken(request.Header.Get(utils.AUTHORIZATION), utils.USER)
 
 		if err != nil {
 			return nil, err
@@ -97,7 +79,7 @@ func ordersByRestaurant(dataBase *sql.DB, request *http.Request) graphql.FieldRe
 			return nil, errors.New("restaurant id not provided")
 		}
 
-		err := queryValidate(request.Header.Get("Authorization"), OWNER)
+		err := utils.SimpleValidateToken(request.Header.Get(utils.AUTHORIZATION), utils.OWNER)
 
 		if err != nil {
 			return nil, err
@@ -110,7 +92,7 @@ func ordersByRestaurant(dataBase *sql.DB, request *http.Request) graphql.FieldRe
 func completedOrders(dataBase *sql.DB, request *http.Request) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (i interface{}, e error) {
 
-		err := queryValidate(request.Header.Get("Authorization"), OWNER)
+		err := utils.SimpleValidateToken(request.Header.Get(utils.AUTHORIZATION), utils.OWNER)
 
 		if err != nil {
 			return nil, err
@@ -123,7 +105,7 @@ func completedOrders(dataBase *sql.DB, request *http.Request) graphql.FieldResol
 func uncompletedOrders(dataBase *sql.DB, request *http.Request) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (i interface{}, e error) {
 
-		err := queryValidate(request.Header.Get("Authorization"), OWNER)
+		err := utils.SimpleValidateToken(request.Header.Get(utils.AUTHORIZATION), utils.OWNER)
 
 		if err != nil {
 			return nil, err
@@ -136,7 +118,7 @@ func uncompletedOrders(dataBase *sql.DB, request *http.Request) graphql.FieldRes
 func allOrders(dataBase *sql.DB, request *http.Request) func(p graphql.ResolveParams) (i interface{}, e error) {
 	return func(p graphql.ResolveParams) (i interface{}, e error) {
 
-		err := queryValidate(request.Header.Get("Authorization"), OWNER)
+		err := utils.SimpleValidateToken(request.Header.Get(utils.AUTHORIZATION), utils.OWNER)
 
 		if err != nil {
 			return nil, err

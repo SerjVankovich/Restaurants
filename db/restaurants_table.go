@@ -2,10 +2,9 @@ package db
 
 import (
 	"../models"
-	"database/sql"
 )
 
-func getRestaurantsQuery(dataBase *sql.DB, query string) ([]*models.Restaurant, error) {
+func getRestaurantsQuery(dataBase dbInterface, query string) ([]*models.Restaurant, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -41,11 +40,11 @@ func getRestaurantsQuery(dataBase *sql.DB, query string) ([]*models.Restaurant, 
 	return restaurants, nil
 }
 
-func GetAllRestaurants(dataBase *sql.DB) ([]*models.Restaurant, error) {
+func GetAllRestaurants(dataBase dbInterface) ([]*models.Restaurant, error) {
 	return getRestaurantsQuery(dataBase, "SELECT * FROM restaurants")
 }
 
-func GetRestaurantById(dataBase *sql.DB, id int) (*models.Restaurant, error) {
+func GetRestaurantById(dataBase dbInterface, id int) (*models.Restaurant, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
@@ -66,11 +65,11 @@ func GetRestaurantById(dataBase *sql.DB, id int) (*models.Restaurant, error) {
 	return &restaurant, nil
 }
 
-func GetRestaurantsByName(dataBase *sql.DB, name string) ([]*models.Restaurant, error) {
+func GetRestaurantsByName(dataBase dbInterface, name string) ([]*models.Restaurant, error) {
 	return getRestaurantsQuery(dataBase, "SELECT * FROM restaurants WHERE name = "+name)
 }
 
-func AddRestaurant(dataBase *sql.DB, restaurant *models.Restaurant) error {
+func AddRestaurant(dataBase dbInterface, restaurant *models.Restaurant) error {
 	if dataBase == nil {
 		return dbErr
 	}

@@ -1,12 +1,12 @@
 package db
 
 import (
-	"../models"
 	"database/sql"
+	"restaurants/models"
 	"strconv"
 )
 
-func getOrdersQuery(dataBase *sql.DB, query string) ([]*models.Order, error) {
+func getOrdersQuery(dataBase dbInterface, query string) ([]*models.Order, error) {
 	if dataBase == nil {
 		return nil, dbErr
 	}
